@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision.datasets import ImageFolder
 import torchvision.transforms as transforms
 import timm
-
+import matplotlib.pyplot as plt
 
 # transform settings
 transformation = transforms.Compose([transforms.Resize([128,128]), transforms.ToTensor()])
@@ -52,19 +52,50 @@ machine = Machine(output_layer)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(machine.parameters(), lr = 1e-5)
 
-
 epoch_num = 10
-
+avg_loss_epoch = []
+epoch_runs = []
+epoch_start = 0
+val_running_loss = 0.0
+avg_val_loss_epoch = []
 for epoch in range(epoch_num):
     machine.train()
     running_loss = 0.0
 
     for img, labels in loader:
-        optimizer.zero_grad
+        optimizer.zero_grad()
         outputs = machine(img)
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
         running_loss += loss.item()
-        
-    print(running_loss/len(loader))
+        val_running_loss += loss.item()
+    epoch_start += 1
+    epoch_runs.append(epoch_start)
+
+    epoch_loss=running_loss/len(loader)
+    avg_loss_epoch.append(epoch_loss)
+
+    machine.eval()
+    torch.no_grad
+    val_epoch_loss = val_running_loss / len(loader)
+    avg_val_loss_epoch.append(val_epoch_loss)
+
+# print(avg_loss_epoch)
+# print(epoch_runs)
+    
+plt.figure(figsize=(12, 4))
+plt.plot(epoch_runs, avg_loss_epoch)
+plt.title("Average Loss per Epoch")
+plt.xlabel("Epoch")
+plt.ylabel("Average Loss")
+plt.grid(True)
+
+plt.figure(figsize=(12, 4))
+plt.plot(epoch_runs, avg_val_loss_epoch)
+plt.title("Average Validation Loss per Epoch")
+plt.xlabel("Epoch")
+plt.ylabel("Average Loss")
+plt.grid(True)
+
+plt.show()
